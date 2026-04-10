@@ -1,0 +1,25 @@
+{
+    "name": "hisdeveloper/holiday-provider",
+    "description": "Provides Kuala Lumpur and Hong Kong public holidays.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "HISDeveloper",
+            "email": "afiq.haikal@hsgplc.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "HISDeveloper\\HolidayProvider\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.1 || ^8.2",
+        "symfony/config": "^6.0|^7.0",
+        "symfony/dependency-injection": "^6.0|^7.0",
+        "symfony/http-kernel": "^6.0|^7.0"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
