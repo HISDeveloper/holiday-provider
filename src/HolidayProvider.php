@@ -13,16 +13,26 @@ class HolidayProvider
      *
      * @param string $state region key (e.g. 'kuala-lumpur', 'hong-kong')
      * @param int|null $year Year (defaults to current year)
+     * @param bool $includeSundays Whether to include Sundays
      * @return array List of holidays in format:
      *               [
      *                   ['date' => 'YYYY-MM-DD', 'name' => 'Holiday Name']
      *               ]
      */
-    public function getHolidays(string $state, ?int $year = null): array
+    public function getHolidays(string $state, ?int $year = null, bool $includeSundays = false): array
     {
         $year ??= (int) date('Y');
 
-        return $this->holidayData[$year][$state] ?? [];
+        $holidays = $this->holidayData[$year][$state] ?? [];
+
+        if ($includeSundays) {
+            $sundays = $this->holidayData[$year]['sunday'] ?? [];
+            $holidays = array_merge($holidays, $sundays);
+        }
+
+        usort($holidays, fn ($a, $b) => strcmp($a['date'], $b['date']));
+
+        return $holidays;
     }
 
     /**
@@ -30,9 +40,10 @@ class HolidayProvider
      *
      * @param string $state region key
      * @param string|\DateTimeInterface $date Date to check (Y-m-d string or DateTimeInterface)
+     * @param bool $includeSundays Whether to include Sundays
      * @return bool True if holiday, false otherwise
      */
-    public function isHoliday(string $state, string|\DateTimeInterface $date): bool
+    public function isHoliday(string $state, string|\DateTimeInterface $date, bool $includeSundays = false): bool
     {
         $dateString = $date instanceof \DateTimeInterface
             ? $date->format('Y-m-d')
@@ -40,7 +51,7 @@ class HolidayProvider
 
         $year = (int) substr($dateString, 0, 4);
 
-        foreach ($this->getHolidays($state, $year) as $holiday) {
+        foreach ($this->getHolidays($state, $year, $includeSundays) as $holiday) {
             if ($holiday['date'] === $dateString) {
                 return true;
             }
@@ -57,14 +68,15 @@ class HolidayProvider
      *
      * @param string $state region key
      * @param \DateTimeInterface $fromDate Starting date
+     * @param bool $includeSundays Whether to include Sundays
      * @return array|null List of holidays on the next date, or null if none found
      */
-    public function getNextHoliday(string $state, \DateTimeInterface $fromDate): ?array
+    public function getNextHoliday(string $state, \DateTimeInterface $fromDate, bool $includeSundays = false): ?array
     {
         $currentYear = (int) $fromDate->format('Y');
         $fromDateString = $fromDate->format('Y-m-d');
 
-        $holidays = $this->getHolidays($state, $currentYear);
+        $holidays = $this->getHolidays($state, $currentYear, $includeSundays);
 
         $nextDate = null;
         $result = [];
@@ -88,7 +100,7 @@ class HolidayProvider
             return $result;
         }
 
-        $nextYearHolidays = $this->getHolidays($state, $currentYear + 1);
+        $nextYearHolidays = $this->getHolidays($state, $currentYear + 1, $includeSundays);
 
         if (empty($nextYearHolidays)) {
             return null;
